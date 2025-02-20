@@ -2,7 +2,10 @@
 session_start();
 require_once 'tcpdf/tcpdf.php';
 
-if (!isset($_SESSION['user_id'])) {
+date_default_timezone_set('Asia/Jakarta');
+$tanggal = date('d.m.y - H:i');
+
+if (!isset($_SESSION['username'])) {
     die("Anda harus login terlebih dahulu.");
 }
 
@@ -10,60 +13,60 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     die("Keranjang belanja kosong.");
 }
 
-// Ambil nama pembeli dari session
-$nama_pembeli = $_SESSION['fullname']; 
+if (!isset($_SESSION['payment_method'])) {
+    die("Metode pembayaran tidak dipilih.");
+}
 
-// Simulasi alamat toko
+$nama_pembeli = $_SESSION['fullname']; 
 $alamat_toko = "Jl. Merdeka No. 17, Jakarta";
 $no_telp_toko = "0812-3456-7890";
-
-// Hitung total harga
 $total_harga = 0;
 foreach ($_SESSION['cart'] as $item) {
     $total_harga += $item['quantity'] * $item['price'];
 }
+$ppn = round($total_harga * 0.1);
+$total_bayar = $total_harga + $ppn;
+$tunai = 300000; // Simulasi pembayaran tunai
+$kembalian = $tunai - $total_bayar;
 
-// **Generate PDF**
-$pdf = new TCPDF();
-$pdf->SetCreator(PDF_CREATOR);
-$pdf->SetTitle('Struk Pembelian');
-$pdf->SetMargins(10, 10, 10);
+$pdf = new TCPDF('P', 'mm', array(58, 200), true, 'UTF-8', false);
+$pdf->SetMargins(5, 5, 5);
 $pdf->SetAutoPageBreak(TRUE, 10);
-$pdf->AddPage();
-$pdf->SetFont('courier', '', 12); // Gunakan font monospasi agar lebih mirip struk asli
+$pdf->AddPage('P', 'A6');
+$pdf->SetFont('courier', '', 10);
 
-// Isi PDF
-$html = "
-<pre>
---------------------------------------
-          Merdeka Basketball
+$html = "<pre>
+----------------------------------
+        MERDEKA BASKETBALL
 Alamat: $alamat_toko
-No. Telepon: $no_telp_toko
---------------------------------------
-Nama Pembeli: $nama_pembeli
---------------------------------------
-Detail Pesanan
---------------------------------------
-Produk        | Jumlah | Harga
---------------------------------------";
+Telp: $no_telp_toko
+----------------------------------
+Tanggal: $tanggal
+Pembeli: $nama_pembeli
+Metode: {$_SESSION['payment_method']}
+----------------------------------
+Produk      Jml   Harga
+----------------------------------";
 
 foreach ($_SESSION['cart'] as $item) {
-    $nama_produk = str_pad($item['name'], 12);
-    $jumlah = str_pad($item['quantity'], 6, ' ', STR_PAD_BOTH);
+    $nama_produk = str_pad(substr($item['name'], 0, 10), 10);
+    $jumlah = str_pad($item['quantity'], 3, ' ', STR_PAD_BOTH);
     $harga = "Rp " . number_format($item['price'] * $item['quantity'], 0, ',', '.');
-    $html .= "\n$nama_produk | $jumlah | $harga";
+    $html .= "\n$nama_produk  $jumlah  $harga";
 }
 
 $html .= "
---------------------------------------
-Total Harga: Rp " . number_format($total_harga, 0, ',', '.') . "
---------------------------------------
-Terima kasih telah berbelanja di Merdeka Basketball!
+----------------------------------
+Subtotal: Rp " . number_format($total_harga, 0, ',', '.') . "
+PPN (10%): Rp " . number_format($ppn, 0, ',', '.') . "
+Total Bayar: Rp " . number_format($total_bayar, 0, ',', '.') . "
+Tunai: Rp " . number_format($tunai, 0, ',', '.') . "
+Kembali: Rp " . number_format($kembalian, 0, ',', '.') . "
+----------------------------------
+TERIMA KASIH ATAS KUNJUNGAN ANDA
 </pre>";
 
-// Kosongkan keranjang setelah checkout
 unset($_SESSION['cart']);
-
 $pdf->writeHTML($html, true, false, true, false, '');
-$pdf->Output('struk_pembelian.pdf', 'I'); // Tampilkan PDF
+$pdf->Output('struk_pembelian.pdf', 'I');
 ?>

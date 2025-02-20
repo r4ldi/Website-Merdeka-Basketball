@@ -45,14 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Menghapus semua barang di keranjang setelah checkout
+// Mengarahkan ke halaman pembayaran setelah checkout
 if (isset($_POST['checkout'])) {
-    $_SESSION['cart'] = [];
-    header("Location: checkout.php");
+    header("Location: payment.php");
     exit;
 }
-
-
 ?>
 
 <!DOCTYPE html>
@@ -111,9 +108,6 @@ if (isset($_POST['checkout'])) {
     </div>
 </section>
 
-
-
-
     <!-- Keranjang Belanja -->
     <aside class="fixed top-20 right-10 bg-gray-800 text-white p-4 rounded-lg w-64">
         <h3 class="font-bold text-xl mb-4">Keranjang</h3>
@@ -139,17 +133,16 @@ if (isset($_POST['checkout'])) {
             <?php endforeach; ?>
             <hr class="my-2">
             <p class="text-right font-bold">Total: Rp <?= number_format($total, 0, ',', '.') ?></p>
-            <form method="POST" action="checkout.php">
-    <button type="submit" class="bg-blue-500 mt-4 p-2 rounded text-white w-full">Check Out</button>
-</form>
-
+            <form method="POST" action="merchandise.php">
+                <button type="submit" name="checkout" class="bg-blue-500 mt-4 p-2 rounded text-white w-full">Check Out</button>
+            </form>
         <?php else : ?>
             <p>Keranjang kosong</p>
         <?php endif; ?>
     </aside>
 
-        <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-8 mt-12">
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
         <div class="max-w-7xl mx-auto text-center">
             <p>&copy; 2024 SMK Merdeka - Semua Hak Dilindungi.</p>
         </div>
